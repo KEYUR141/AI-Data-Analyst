@@ -1,0 +1,21 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}AI Data Analyst{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <a class="brand" href="{% url 'app:home' %}" aria-label="AI Data Analyst home">analyst<span class="brand-dot">.</span></a>
+    <nav aria-label="Main navigation"><a href="{% url 'app:home' %}">Workspace <span aria-hidden="true">?</span></a></nav>
+    <span class="header-note">A clearer view of your data.</span>
+  </header>
+  <main id="main">{% block content %}{% endblock %}</main>
+  <footer><a class="brand" href="{% url 'app:home' %}">analyst.</a><span>Your data. Clear questions. Useful answers.</span><span>AI Data Analyst / 2026</span></footer>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,3 +1,15 @@
 .env
+.env.*
+!.env.example
 env/
-
+.venv/
+__pycache__/
+*.py[cod]
+*.sqlite3
+.pytest_cache/
+.pytest-tmp/
+.ruff_cache/
+.coverage
+staticfiles/
+var/
+node_modules/

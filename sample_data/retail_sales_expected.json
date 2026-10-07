@@ -1,0 +1,15 @@
+{
+  "row_count": 121,
+  "duplicate_row_count": 1,
+  "missing_revenue": 1,
+  "missing_customer_id": 1,
+  "region_revenue": {
+    "East": 2250,
+    "West": 7120,
+    "North": 25350,
+    "South": 27000
+  },
+  "total_revenue": 61720,
+  "highest_revenue_region": "South",
+  "injected_anomaly_order_id": "ORD-0011"
+}

@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}{{ dataset.original_name }} / AI Data Analyst{% endblock %}
+{% block content %}
+<div class="preview-intro">
+<a href="{% url 'app:home' %}">Back to workspace</a>
+<p class="eyebrow">02 / DATASET EXPLORER</p><h1 class="dataset-title">{{ dataset.original_name }}</h1>
+<p>{{ dataset.row_count }} rows · {{ dataset.columns|length }} columns · {{ dataset.size_bytes|filesizeformat }}</p>
+</div><section class="panel"><div class="section-heading"><h2>Data preview</h2><span class="section-number">01</span></div><p>First {{ dataset.preview|length }} data rows. Values are shown as uploaded.</p>
+<div class="table-scroll"><table><thead><tr>{% for column in dataset.columns %}<th scope="col">{{ column }}</th>{% endfor %}</tr></thead>
+<tbody>{% for row in dataset.preview %}<tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>{% endfor %}</tbody></table></div></section>
+<section class="panel"><div class="section-heading"><h2>Data profile</h2><span class="section-number">02</span></div>
+{% if dataset.profile %}
+<p>{{ dataset.profile.duplicate_row_count }} duplicate rows (repeats after the first occurrence).</p>
+<p>Types are inferred from all nonblank values. Missing cells include whitespace-only values. The original file is unchanged.</p>
+<div class="table-scroll"><table><thead><tr><th>Column</th><th>Inferred type</th><th>Missing</th><th>Distinct nonblank values</th><th>Statistics</th></tr></thead>
+<tbody>{% for column in dataset.profile.columns %}<tr><td>{{ column.name }}</td><td>{{ column.type }}</td><td>{{ column.missing_count }}</td><td>{{ column.distinct_count }}</td><td>{% for key,value in column.statistics.items %}<div>{{ key }}: {{ value }}</div>{% empty %}No statistics{% endfor %}</td></tr>{% endfor %}</tbody></table></div>
+{% else %}<p>This dataset was uploaded before profiling was available. Upload it again to generate a profile.</p>{% endif %}
+</section>
+<section class="panel planning-panel"><div class="section-heading"><h2>Analyze your data</h2><span class="section-number">03</span></div>
+<p>Ask a question to get a proposed analysis or a clarification. Your question, column names, and inferred types are sent to Gemini. Validated queries run against your selected dataset and return calculated results.</p>
+<form id="planning-form" method="post" action="{% url 'app:plan' dataset.id %}">{% csrf_token %}
+<label for="plan-question">Question</label>
+<textarea id="plan-question" rows="3" name="question" maxlength="2000" required placeholder="Which region generated the highest revenue?"></textarea>
+<button type="submit">Analyze</button></form>
+<p id="planning-status" role="status" aria-live="polite"></p>
+<div id="planning-result" aria-live="polite" aria-atomic="true"></div>
+</section>
+{% endblock %}
+{% block scripts %}{% load static %}<script src="{% static 'vendor/plotly.min.js' %}" defer></script><script src="{% static 'js/planning.js' %}" defer></script>{% endblock %}
