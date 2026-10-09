@@ -100,7 +100,7 @@ Automated tests mock Gemini and use isolated SQLite plus temporary files; numeri
 
 ### Demo video
 
-The demo video link will be added once recorded. A 10?30 second walkthrough should show dataset selection, a natural-language question, a chart, and a contextual follow-up.
+[Watch the demo video on Google Drive](https://drive.google.com/file/d/1jbZrDi6M9qgZ1DBW9nPo6NRSG4xs-AWn/view?usp=sharing)
 
 ## Limits and remaining submission work
 
@@ -108,7 +108,7 @@ One dataset per conversation; cross-file joins are not implemented. SQL is a res
 
 Assistant findings are deterministic summaries of computed results, accompanied by LLM-generated methodology and assumptions. This avoids a second provider call and invented numerical claims. Anomaly requests use 1.5 x IQR fences; fewer than four observations and zero-IQR columns are skipped with explanations. Flags indicate statistical outliers, not business errors.
 
-Full application Docker support is implemented, but a runtime smoke test remains pending because Docker is unavailable in this workspace. Screenshots are included above; the demo link is pending. Forecasting, report exports, and dashboard generation remain optional future work.
+Full application Docker support is implemented, but a runtime smoke test remains pending because Docker is unavailable in this workspace. Screenshots and the demo video link are included above. Forecasting, report exports, and dashboard generation remain optional future work.
 
 ## Full Docker application
 
