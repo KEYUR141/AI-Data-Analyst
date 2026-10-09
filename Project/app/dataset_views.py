@@ -2,6 +2,7 @@ import logging
 
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import DatabaseError
 from django.shortcuts import get_object_or_404, redirect, render
@@ -13,6 +14,7 @@ from .services.datasets import delete_dataset, save_dataset
 logger = logging.getLogger(__name__)
 
 
+@login_required
 @require_POST
 def upload(request):
     files = request.FILES.getlist("files")
@@ -23,7 +25,7 @@ def upload(request):
         request.session.create()
     for file in files:
         try:
-            save_dataset(file, request.session.session_key)
+            save_dataset(file, request.session.session_key, owner=request.user)
         except ValidationError as exc:
             messages.error(request, f"{file.name}: {exc.messages[0]}")
         except (OSError, DatabaseError):
@@ -35,16 +37,29 @@ def upload(request):
 
 
 def owned_dataset(request, dataset_id):
-    return get_object_or_404(
-        Dataset, id=dataset_id, owner_session=request.session.session_key or ""
+    return get_object_or_404(Dataset, id=dataset_id, owner=request.user)
+
+
+@login_required
+@require_GET
+def preview(request, dataset_id):
+    from .models import AnalysisRun
+
+    dataset = owned_dataset(request, dataset_id)
+    history = list(
+        AnalysisRun.objects.filter(
+            user_message__conversation__dataset=dataset,
+            user_message__conversation__owner=request.user,
+        )
+        .select_related("user_message", "assistant_message")
+        .order_by("-created_at", "-id")[:20]
+    )
+    return render(
+        request, "app/preview.html", {"dataset": dataset, "chat_history": reversed(history)}
     )
 
 
-@require_GET
-def preview(request, dataset_id):
-    return render(request, "app/preview.html", {"dataset": owned_dataset(request, dataset_id)})
-
-
+@login_required
 @require_POST
 def remove(request, dataset_id):
     dataset = owned_dataset(request, dataset_id)

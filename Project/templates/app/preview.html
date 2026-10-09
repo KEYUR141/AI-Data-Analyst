@@ -23,6 +23,13 @@
 <textarea id="plan-question" rows="3" name="question" maxlength="2000" required placeholder="Which region generated the highest revenue?"></textarea>
 <button type="submit">Analyze</button></form>
 <p id="planning-status" role="status" aria-live="polite"></p>
+<div id="chat-history">
+{% for run in chat_history %}<article class="plan-message"><p class="submitted-question">Your question: {{ run.user_message.content }}</p><h3>{{ run.get_status_display }}</h3><p>{{ run.assistant_message.content }}</p>
+{% if run.result.columns %}<div class="table-scroll"><table><thead><tr>{% for column in run.result.columns %}<th>{{ column }}</th>{% endfor %}</tr></thead><tbody>{% for row in run.result.rows %}<tr>{% for cell in row %}<td>{{ cell|default_if_none:'?' }}</td>{% endfor %}</tr>{% endfor %}</tbody></table></div>{% endif %}
+{% if run.result.truncated %}<p>Result preview is limited.</p>{% endif %}
+{% if run.executed_sql %}<details><summary>View analysis SQL</summary><pre>{{ run.executed_sql }}</pre></details>{% endif %}
+{% if run.result.chart %}{{ run.result.chart|json_script:run.id }}<div class="saved-chart" data-chart-id="{{ run.id }}"></div>{% endif %}
+</article>{% endfor %}</div>
 <div id="planning-result" aria-live="polite" aria-atomic="true"></div>
 </section>
 {% endblock %}

@@ -1,0 +1,4 @@
+{% load static %}
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{% block title %}Account{% endblock %} / Analyst</title><link rel="stylesheet" href="{% static 'css/auth.css' %}"></head>
+<body><main class="auth-card"><a class="brand" href="{% url 'app:home' %}">analyst.</a>{% block content %}{% endblock %}</main></body></html>

@@ -1,9 +1,9 @@
 import pytest
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import Client
 
 from .services.validation import CSVLimits, validate_csv
+from .testing import authenticated_client
 
 
 def uploaded(content, name="data.csv"):
@@ -69,7 +69,7 @@ def test_blank_lines_and_single_column_are_supported():
 
 
 def test_batch_reports_each_file_independently():
-    response = Client().post(
+    response = authenticated_client().post(
         "/datasets/validate/", {"files": [uploaded(b"a\n1", "good.csv"), uploaded(b"", "bad.csv")]}
     )
     assert response.status_code == 200
@@ -77,13 +77,16 @@ def test_batch_reports_each_file_independently():
 
 
 def test_endpoint_requires_files_and_post():
-    client = Client()
+    client = authenticated_client()
     assert client.get("/datasets/validate/").status_code == 405
     assert client.post("/datasets/validate/").status_code == 400
 
 
 def test_endpoint_preserves_csrf_protection():
-    response = Client(enforce_csrf_checks=True).post(
+    response = authenticated_client(enforce_csrf_checks=True).post(
         "/datasets/validate/", {"files": uploaded(b"a\n1")}
     )
     assert response.status_code == 403
+
+
+pytestmark = pytest.mark.django_db

@@ -16,7 +16,7 @@ def private_storage():
     return FileSystemStorage(location=settings.PRIVATE_UPLOAD_ROOT)
 
 
-def save_dataset(upload, owner_session):
+def save_dataset(upload, owner_session, owner=None):
     limits = CSVLimits(
         settings.CSV_MAX_BYTES,
         settings.CSV_MAX_ROWS,
@@ -31,6 +31,7 @@ def save_dataset(upload, owner_session):
         with transaction.atomic():
             return Dataset.objects.create(
                 owner_session=owner_session,
+                owner=owner,
                 original_name=upload.name,
                 storage_name=name,
                 size_bytes=validated.size_bytes,

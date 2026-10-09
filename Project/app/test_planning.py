@@ -5,10 +5,10 @@ from uuid import uuid4
 
 import httpx
 import pytest
-from django.test import Client
 
 from .services.planning import PlanningError, generate_plan, validate_plan
 from .services.sql_validator import InvalidSQL, validate_sql
+from .testing import authenticated_client
 
 
 @pytest.fixture
@@ -140,7 +140,7 @@ def test_provider_timeout_is_sanitized(dataset, settings):
         factory.return_value.__enter__.return_value.models.generate_content.side_effect = (
             httpx.ReadTimeout("secret")
         )
-        with pytest.raises(PlanningError, match="unavailable"):
+        with pytest.raises(PlanningError, match="timed out"):
             generate_plan("Revenue", dataset)
 
 
@@ -150,11 +150,12 @@ def test_endpoint_ownership_and_plan_response():
     from .services.plan_schemas import ClarificationPlan
 
     # Create metadata directly: this test never writes a private file.
-    owner = Client()
+    owner = authenticated_client()
     session = owner.session
     session.save()
     dataset = Dataset.objects.create(
         owner_session=session.session_key,
+        owner=owner.test_user,
         original_name="data.csv",
         storage_name="test.csv",
         size_bytes=4,
@@ -164,7 +165,9 @@ def test_endpoint_ownership_and_plan_response():
     )
     with patch("app.planning_views.generate_plan") as generate:
         assert (
-            Client().post(f"/datasets/{dataset.id}/plan/", {"question": "Revenue"}).status_code
+            authenticated_client()
+            .post(f"/datasets/{dataset.id}/plan/", {"question": "Revenue"})
+            .status_code
             == 404
         )
         generate.assert_not_called()
@@ -173,3 +176,6 @@ def test_endpoint_ownership_and_plan_response():
         response = owner.post(f"/datasets/{dataset.id}/plan/", {"question": "Revenue"})
         assert response.status_code == 200
         assert response.json()["executed"] is False
+
+
+pytestmark = pytest.mark.django_db

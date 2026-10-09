@@ -6,6 +6,7 @@
   const result = document.getElementById('planning-result');
   const question = document.getElementById('plan-question');
   let busy = false;
+  document.querySelectorAll('.saved-chart').forEach(async node => { try { const figure = JSON.parse(document.getElementById(node.dataset.chartId).textContent); await Plotly.newPlot(node, figure.data, figure.layout, {responsive:true, displaylogo:false}); } catch (_) { node.textContent = 'Saved chart unavailable; see the result table.'; } });
 
   function add(tag, text, parent = result) {
     const element = document.createElement(tag);
@@ -24,7 +25,7 @@
     button.textContent = 'Generating…';
     status.textContent = 'Preparing and running your analysis. This may take a moment…';
     status.classList.add('loading-status');
-    result.querySelectorAll('.analysis-chart').forEach(chart => { if (window.Plotly) Plotly.purge(chart); });
+    if (result.childNodes.length) { const previous = document.createElement('article'); previous.className = result.className; while (result.firstChild) previous.appendChild(result.firstChild); document.getElementById('chat-history').appendChild(previous); }
     result.replaceChildren();
     result.setAttribute('aria-busy', 'true');
     result.className = 'plan-message';
@@ -43,7 +44,7 @@
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Unable to generate a plan.');
       const plan = data.plan;
-      if (!plan || !['clarify', 'analyze'].includes(plan.action)) {
+      if (!plan || !['clarify', 'analyze', 'anomalies'].includes(plan.action)) {
         throw new Error('The server returned an unexpected response. Please try again.');
       }
       add('p', `Your question: ${body.get('question')}`).className = 'submitted-question';
@@ -74,7 +75,7 @@
           if (output.truncated) add('p', 'Result preview is limited; additional rows were omitted.');
           (output.notes || []).forEach(note => add('p', note).className = 'hint');
         }
-        add('p', plan.explanation);
+        add('p', data.result?.summary || plan.explanation);
         if (plan.assumptions?.length) {
           add('h4', 'Assumptions');
           const list = add('ul', '');

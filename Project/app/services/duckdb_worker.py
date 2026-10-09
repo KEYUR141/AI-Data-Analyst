@@ -32,6 +32,8 @@ def execute(payload):
         records.append(row)
     frame = pd.DataFrame(records, columns=columns, dtype=str)
     types = {c["name"]: c["type"] for c in payload["profile"].get("columns", [])}
+    if payload.get("action") == "anomalies":
+        return anomaly_results(frame, payload)
     selections = []
     for name in columns:
         quoted = identifier(name)
@@ -76,6 +78,49 @@ def execute(payload):
             "rows": [[encode(v) for v in row] for row in result[: payload["result_rows"]]],
             "truncated": truncated,
         }
+
+
+def anomaly_results(frame, payload):
+    flags = []
+    total = 0
+    methods = []
+    for name in payload["anomaly_columns"]:
+        values = pd.to_numeric(frame[name].str.strip().replace("", None), errors="raise")
+        clean = values.dropna()
+        if len(clean) < 4:
+            methods.append(f"{name}: skipped; fewer than four nonmissing values.")
+            continue
+        q1, q3 = float(clean.quantile(0.25)), float(clean.quantile(0.75))
+        iqr = q3 - q1
+        if iqr == 0:
+            methods.append(f"{name}: skipped; zero IQR makes this method uninformative.")
+            continue
+        lower, upper = q1 - 1.5 * iqr, q3 + 1.5 * iqr
+        mask = (values < lower) | (values > upper)
+        total += int(mask.sum())
+        for index, value in values[mask].items():
+            if len(flags) < payload["result_rows"]:
+                flags.append(
+                    [
+                        int(index) + 1,
+                        name,
+                        float(value),
+                        lower,
+                        upper,
+                        "Below lower fence" if value < lower else "Above upper fence",
+                    ]
+                )
+        methods.append(f"{name}: Q1={q1:g}, Q3={q3:g}, IQR={iqr:g}; fences [{lower:g}, {upper:g}].")
+    return {
+        "columns": ["data_row", "column", "value", "lower_fence", "upper_fence", "reason"],
+        "rows": flags,
+        "truncated": total > len(flags),
+        "flag_count": total,
+        "method_notes": methods
+        + [
+            "IQR flags are statistical outliers, not proof of business errors. Missing values excluded; duplicates retained. Data row numbers exclude the header and blank lines."
+        ],
+    }
 
 
 if __name__ == "__main__":

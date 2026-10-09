@@ -8,8 +8,8 @@ from django.urls import reverse
 class FoundationTests(SimpleTestCase):
     def test_home(self):
         response = self.client.get(reverse("app:home"))
-        self.assertContains(response, "Make sense of your data.")
-        self.assertContains(response, "Upload CSV")
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/accounts/login/", response.url)
 
     def test_health_without_database(self):
         self.assertEqual(self.client.get(reverse("app:health")).json(), {"status": "ok"})

@@ -32,6 +32,14 @@ class ClarificationPlan(StrictModel):
     question: Text
 
 
+class AnomalyPlan(StrictModel):
+    action: Literal["anomalies"]
+    dataset_id: UUID
+    columns: list[Name] = Field(min_length=1, max_length=10)
+    explanation: Text
+    assumptions: list[Text] = Field(max_length=10)
+
+
 PLAN_ADAPTER = TypeAdapter(
-    Annotated[AnalysisPlan | ClarificationPlan, Field(discriminator="action")]
+    Annotated[AnalysisPlan | AnomalyPlan | ClarificationPlan, Field(discriminator="action")]
 )

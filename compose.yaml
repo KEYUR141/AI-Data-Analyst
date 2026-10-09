@@ -1,5 +1,30 @@
-# Development database; application container will be added later.
+# Local application and database. Configure HTTPS before public deployment.
 services:
+  web:
+    build: .
+    env_file: .env
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: '5432'
+      DEBUG: 'False'
+      SECURE_SSL_REDIRECT: 'False'
+      SESSION_COOKIE_SECURE: 'False'
+      CSRF_COOKIE_SECURE: 'False'
+    ports:
+      - '127.0.0.1:8000:8000'
+    volumes:
+      - private_uploads:/app/var/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    mem_limit: 1g
+    cpus: 2
+    healthcheck:
+      test: ['CMD', 'python', '-c', 'import urllib.request; urllib.request.urlopen("http://127.0.0.1:8000/ready/")']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
   db:
     image: postgres:17-alpine
     environment:
@@ -17,3 +42,4 @@ services:
       retries: 10
 volumes:
   postgres_data:
+  private_uploads:

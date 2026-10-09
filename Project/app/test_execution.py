@@ -101,3 +101,18 @@ def test_timeout_is_reported(dataset):
     ):
         with pytest.raises(ExecutionError, match="timed out"):
             execute_analysis(plan(dataset, "SELECT * FROM dataset"), dataset)
+
+
+def test_sample_anomaly_runs_in_real_worker(dataset):
+    from .services.plan_schemas import AnomalyPlan
+
+    anomaly = AnomalyPlan(
+        action="anomalies",
+        dataset_id=dataset.id,
+        columns=["revenue"],
+        explanation="Apply IQR fences.",
+        assumptions=[],
+    )
+    output = execute_analysis(anomaly, dataset)
+    assert output["flag_count"] >= 1
+    assert any(row[0] == 11 and row[2] == 12000 for row in output["rows"])

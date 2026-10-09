@@ -1,6 +1,7 @@
 from dataclasses import asdict
 
 from django.conf import settings
+from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
@@ -8,6 +9,7 @@ from django.views.decorators.http import require_POST
 from .services.validation import CSVLimits, validate_csv
 
 
+@login_required
 @require_POST
 def validate_uploads(request):
     """Validate a bounded batch; no files or metadata are persisted yet."""

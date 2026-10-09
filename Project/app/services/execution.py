@@ -18,11 +18,13 @@ def execute_analysis(plan, dataset):
     if plan.dataset_id != dataset.id:
         raise ExecutionError("Analysis does not match the selected dataset.")
     try:
-        sql = validate_sql(plan.sql, dataset.columns)
+        sql = validate_sql(plan.sql, dataset.columns) if plan.action == "analyze" else ""
     except InvalidSQL as exc:
         raise ExecutionError(str(exc)) from exc
     payload = {
         "path": private_storage().path(dataset.storage_name),
+        "action": plan.action,
+        "anomaly_columns": plan.columns if plan.action == "anomalies" else [],
         "sql": sql,
         "columns": dataset.columns,
         "profile": dataset.profile,

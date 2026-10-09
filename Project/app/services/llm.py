@@ -35,6 +35,7 @@ class GeminiConfig:
 
     def generation_options(self):
         return types.GenerateContentConfig(
+            automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
             temperature=self.temperature,
             max_output_tokens=self.max_output_tokens,
         )
